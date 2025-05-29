@@ -1,0 +1,73 @@
+name: IaC CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-2
+      CLUSTER_NAME: gg-wiz-tasky-2
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform Init & Apply
+      working-directory: terraform
+      run: |
+        terraform init
+        terraform apply -auto-approve
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+    - name: Apply Kubernetes Manifests
+      run: |
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/gg-wiz-tasky-deployment.yaml
+        kubectl apply -f k8s/gg-wiz-tasky-service.yaml
+        kubectl apply -f k8s/alb.yaml
+        kubectl apply -f k8s/gg-wiz-ingress.yaml
+
+    - name: Get EKS SG ID
+      id: get-eks-sg
+      run: | 
+        EKS_SG=$(terraform -chdir=terraform output -raw eks_cluster_sg_id) 
+        echo "eks_sg=$EKS_SG" >> $GITHUB_OUTPUT
+
+    - name: Attach EKS SG to EC2
+      run: |
+        INSTANCE_ID="i-00b9d847dfecff17f"
+        REGION="us-east-2"
+        EKS_SG="${{ steps.get-eks-sg.outputs.eks_sg }}"
+
+        CURRENT_SGS=$(aws ec2 describe-instances \
+          --instance-ids "$INSTANCE_ID" \
+          --query "Reservations[].Instances[].SecurityGroups[].GroupId" \
+          --output text \
+          --region $REGION)
+
+        # Combine existing SGs with EKS SG (ensure no duplication)
+        UPDATED_SGS=$(echo $CURRENT_SGS $EKS_SG | tr ' ' '\n' | sort -u | paste -sd "," -)
+
+        aws ec2 modify-instance-attribute \
+          --instance-id "$INSTANCE_ID" \
+          --groups $UPDATED_SGS \
+          --region $REGION
+

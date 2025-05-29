@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gg-wiz-tasky-deployment
+  namespace: gg-wiz
+  labels:
+    app: gg-wiz-tasky-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gg-wiz-tasky-app
+  template:
+    metadata:
+      labels:
+        app: gg-wiz-tasky-app
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+      containers:
+      - name: tasky
+        image: 225989335412.dkr.ecr.us-east-2.amazonaws.com/gg/wiz:latest
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://admin:admin@ip-10-0-3-131.us-east-2.compute.internal:27017"
+        - name: SECRET_KEY
+          value: "secret123"
+        imagePullPolicy: IfNotPresent
+      nodeSelector:
+        kubernetes.io/os: linux

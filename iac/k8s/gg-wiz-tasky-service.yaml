@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gg-wiz-tasky-service
+  namespace: gg-wiz
+  labels:
+    app: gg-wiz-tasky-app
+spec:
+  selector:
+    app: gg-wiz-tasky-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
