@@ -12,6 +12,10 @@ jobs:
     env:
       AWS_REGION: us-east-2
       CLUSTER_NAME: gg-wiz-tasky-2
+    
+    defaults:
+      run:
+        working-directory: "iac/tf"
 
     steps:
     - name: Checkout code
