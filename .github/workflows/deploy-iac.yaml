@@ -15,7 +15,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: "iac/tf"
+        working-directory: "iac/tf/eks-2"
 
     steps:
     - name: Checkout code
