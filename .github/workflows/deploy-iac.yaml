@@ -68,7 +68,7 @@ jobs:
           --region $REGION)
 
         # Combine existing SGs with EKS SG (ensure no duplication)
-        UPDATED_SGS=$(echo $CURRENT_SGS $EKS_SG | tr ' ' '\n' | sort -u | paste -sd "," -)
+        UPDATED_SGS=$(echo $CURRENT_SGS $EKS_SG | tr ' ' '\n' | sort -u | xargs)
 
         aws ec2 modify-instance-attribute \
           --instance-id "$INSTANCE_ID" \
