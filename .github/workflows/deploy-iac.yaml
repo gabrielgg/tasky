@@ -52,7 +52,7 @@ jobs:
     - name: Get EKS SG ID
       id: get-eks-sg
       run: | 
-        EKS_SG=$(terraform show | jq -r .values.root_module.resources[0].values.vpc_config[].cluster_security_group_id) 
+        EKS_SG=$(terraform show -json | jq -r .values.root_module.resources[0].values.vpc_config[].cluster_security_group_id) 
         echo "eks_sg=$EKS_SG" >> $GITHUB_OUTPUT
 
     - name: Attach EKS SG to EC2
