@@ -34,6 +34,16 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME .
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: $IMAGE_NAME
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH' 
+
       - name: Tag Docker image
         run: |
           ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
