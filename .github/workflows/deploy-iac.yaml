@@ -19,10 +19,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@main
 
     - name: Install tfsec
-      uses: aquasecurity/tfsec-action@1.0.0
+      uses: aquasecurity/tfsec-action@v1.0.0
 
     - name: Run tfsec on iac
       run: tfsec ./iac/tf/eks-2
