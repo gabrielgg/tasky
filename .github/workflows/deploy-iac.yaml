@@ -21,6 +21,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Install tfsec
+      uses: aquasecurity/tfsec-action@1.0.0
+
+    - name: Run tfsec on iac
+      run: tfsec ./iac/tf/eks-2
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
